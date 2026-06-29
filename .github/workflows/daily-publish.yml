@@ -1,0 +1,39 @@
+name: Daily GitHub Trending Publish
+
+on:
+  schedule:
+    # 每天北京时间 9:00 (UTC 1:00)
+    - cron: '0 1 * * *'
+  workflow_dispatch:    # 支持手动触发
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run daily publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
+          WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
+        run: python src/main.py
+
+      - name: Upload article as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trending-article
+          path: output/
+          retention-days: 7
