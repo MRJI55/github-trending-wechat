@@ -4,12 +4,17 @@ on:
   schedule:
     # 每天北京时间 9:00 (UTC 1:00)
     - cron: '0 1 * * *'
-  workflow_dispatch:    # 支持手动触发
+  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -23,17 +28,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run daily publish
+      - name: Generate trending page
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-          WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
-          WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
         run: python src/main.py
 
-      - name: Upload article as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          name: trending-article
-          path: output/
-          retention-days: 7
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          keep_files: true
+          commit_message: 'deploy: daily trending ${{ github.sha }}'

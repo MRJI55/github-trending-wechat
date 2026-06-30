@@ -1,87 +1,84 @@
-# GitHub Trending 微信日报
+# GitHub 热榜日报
 
-每天 9:00（北京时间）自动抓取 GitHub Trending Top 10，AI 润色后发布到微信公众号。
+每天 9:00（北京时间）自动抓取 GitHub Trending Top 10，AI 润色后生成精美网页，部署到 GitHub Pages。
 
-**免费方案**：AI 生成使用 GitHub Models（零费用），无需注册任何外部 AI 服务。
+**无需服务器、无需域名、无需微信认证。** 打开网页就能看。
+
+🌐 示例地址：`https://你的用户名.github.io/github-trending-wechat/`
+
+## 工作原理
+
+```
+每天 9:00 GitHub Actions 自动运行
+  → 抓取 github.com/trending
+  → GitHub Models (Llama 3.3 70B) 生成文章
+  → 构建深色主题网页
+  → 部署到 GitHub Pages
+```
 
 ## 使用方法
 
-### 1. 注册微信公众号
-
-访问 [mp.weixin.qq.com](https://mp.weixin.qq.com) 注册个人订阅号，获取：
-- AppID（开发 → 基本配置）
-- AppSecret（开发 → 基本配置）
+### 1. Fork 或 Clone 本仓库
 
 ### 2. 获取 GitHub Token（用于 AI 生成）
 
-1. 打开 [GitHub Tokens](https://github.com/settings/tokens)
-2. 点击 Generate new token (classic)
-3. 勾选 `repo` 和 `workflow` 权限
-4. 生成并复制 token
-
-> 注意：如果是公开仓库，不需要任何额外权限即可使用 GitHub Models 的免费额度。
+1. [github.com/settings/tokens](https://github.com/settings/tokens)
+2. Generate new token (classic) → 不用勾任何权限
+3. 复制 token
 
 ### 3. 配置 GitHub Secrets
 
-在仓库 Settings → Secrets and variables → Actions 中添加：
+Settings → Secrets and variables → Actions → New repository secret：
 
-| Secret 名称 | 值 |
-|-------------|-----|
-| `WECHAT_APP_ID` | 公众号 AppID |
-| `WECHAT_APP_SECRET` | 公众号 AppSecret |
-| `GH_PAT` | GitHub Personal Access Token |
+| Name | Value |
+|------|-------|
+| `GH_PAT` | 你的 GitHub Token |
 
-### 4. 本地测试
+> 只需要这一个 Secret。不需要微信 AppID/AppSecret，不需要 IP 白名单。
 
-```bash
-# 设置环境变量
-export WECHAT_APP_ID=your_app_id
-export WECHAT_APP_SECRET=your_app_secret
-export GITHUB_TOKEN=your_github_token
+### 4. 启用 GitHub Pages
 
-# 安装依赖
-pip install -r requirements.txt
+Settings → Pages → Source: **Deploy from a branch** → Branch: `gh-pages` `/ (root)` → Save
 
-# 完整流程测试
-python src/main.py
-```
+等 1 分钟后访问 `https://你的用户名.github.io/github-trending-wechat/`
 
-### 5. 启用定时任务
+### 5. 手动测试
 
-推送代码到 GitHub `main` 分支，GitHub Actions 将每天 9:00 自动运行。
+Actions → Daily GitHub Trending Publish → Run workflow
 
-也可以手动触发：Actions → Daily Publish → Run workflow。
+## 接入微信公众号
 
-## 费用
+公众号后台 → 自定义菜单 → 添加菜单项：
+- 菜单名：**今日热榜**
+- 类型：跳转网页
+- URL：`https://你的用户名.github.io/github-trending-wechat/`
 
-| 环节 | 费用 |
-|------|------|
-| GitHub Trending 抓取 | 免费 |
-| GitHub Models AI 生成 | **免费**（Llama 3.3 70B） |
-| 微信公众号 | 免费（个人订阅号） |
-| GitHub Actions | 免费（公开仓库无限分钟） |
-
-**零费用运行。**
+用户关注后点击菜单即可查看每日热榜。
 
 ## 项目结构
 
 ```
 github-trending-wechat/
-├── .github/workflows/daily-publish.yml   # 定时触发器
+├── .github/workflows/daily-publish.yml   # 定时触发 + 部署
 ├── src/
-│   ├── main.py                           # 主流程编排
+│   ├── main.py                           # 主流程
 │   ├── fetch_trending.py                 # 抓取 GitHub Trending
 │   ├── generate_article.py               # GitHub Models 生成文章
-│   └── wechat_api.py                     # 微信 API 封装
-├── templates/prompt.md                   # AI 写作风格指南
-├── docs/OUTPUT_EXAMPLE.md                # 生成文章示例
-├── requirements.txt
-└── README.md
+│   └── build_page.py                     # 构建深色主题网页
+├── docs/                                 # 网页输出目录
+│   ├── index.html                        # 今日热榜
+│   └── archive/                          # 历史归档
+├── templates/prompt.md                   # AI 写作风格
+└── output/                               # 生成数据（可查看）
 ```
 
-## 注意事项
+## 费用
 
-- 个人订阅号每天只能发布 1 次
-- 首次使用需要在微信公众号后台配置 **IP 白名单**（添加 GitHub Actions 出口 IP）
-- GitHub Models 免费额度对公开仓库足够使用
-- 如果某天 AI 生成失败，会自动降级到模板文章，不会中断发布
+**零。** 全部免费。
+
+| 环节 | 费用 |
+|------|------|
+| GitHub Trending 抓取 | 免费 |
+| GitHub Models AI 生成 | 免费 |
+| GitHub Actions 调度 | 免费（公开仓库） |
+| GitHub Pages 托管 | 免费 |

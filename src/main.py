@@ -1,36 +1,37 @@
 """
-主流程编排：抓取 → 生成 → 发布
+主流程编排：抓取 → 生成 → 构建网页
 
 用法:
     python src/main.py                    # 完整流程
-    python src/main.py --skip-publish     # 只抓取和生成，不发布
+    python src/main.py --skip-build       # 只抓取和生成，不构建网页
     python src/main.py --fetch-only       # 只抓取
+    python src/main.py --dry-run          # 使用 mock 数据
 """
 
 import os
 import sys
 import json
 import argparse
+import io
 from datetime import datetime
 
-# 将 src 目录加入 path
 sys.path.insert(0, os.path.dirname(__file__))
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 from fetch_trending import fetch_trending
-# Lazy imports for optional dependencies
-# generate_article requires: pip install anthropic
-# wechat_api requires: pip install requests (always available)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="GitHub Trending → 微信日报")
-    parser.add_argument("--skip-publish", action="store_true", help="只抓取和生成，不发布到微信")
+    parser = argparse.ArgumentParser(description="GitHub Trending → 网页热榜")
+    parser.add_argument("--skip-build", action="store_true", help="只抓取和生成，不构建网页")
     parser.add_argument("--fetch-only", action="store_true", help="只抓取 Trending 数据")
     parser.add_argument("--dry-run", action="store_true", help="使用 mock 数据，不调用真实 API")
     args = parser.parse_args()
 
     today_str = datetime.now().strftime("%Y%m%d")
-    output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
+    project_dir = os.path.dirname(os.path.dirname(__file__))
+    output_dir = os.path.join(project_dir, "output")
     os.makedirs(output_dir, exist_ok=True)
 
     # ── Step 1: 抓取 ────────────────────────────────
@@ -57,7 +58,7 @@ def main():
     # ── Step 2: AI 生成文章 ──────────────────────────
     print("")
     print("=" * 60)
-    print("  STEP 2: Generate Article with Claude")
+    print("  STEP 2: Generate Article with GitHub Models")
     print("=" * 60)
 
     from generate_article import generate_article
@@ -67,109 +68,31 @@ def main():
     try:
         article = generate_article(repos=repos, output_path=article_path)
     except Exception as e:
-        print(f"  [!] Article generation failed: {e}", file=sys.stderr)
-        # 兜底：用简单模板生成一篇基础文章
+        print(f"  [!] Article generation failed: {e}")
         article = _fallback_article(repos)
         with open(article_path, "w", encoding="utf-8") as f:
             f.write(article)
         print(f"  [*] Used fallback template article")
 
-    # ── Step 3: 发布到微信公众号 ─────────────────────
+    # ── Step 3: 构建网页 ─────────────────────────────
     print("")
     print("=" * 60)
-    print("  STEP 3: Publish to WeChat")
+    print("  STEP 3: Build Web Page")
     print("=" * 60)
 
-    if args.skip_publish:
-        print("  [*] --skip-publish specified, draft not created.")
-    elif args.dry_run:
-        print("  [*] --dry-run, skipping publish.")
+    if args.skip_build:
+        print("  [*] --skip-build specified, skipping.")
     else:
-        from wechat_api import publish_article
+        from build_page import build_daily_page
 
-        try:
-            # 提取标题（文章的第一行 # 标题）
-            title = _extract_title(article)
-
-            # 将 Markdown 转为简单的 HTML（微信草稿 API 支持）
-            content_html = _md_to_wechat_html(article)
-
-            result = publish_article(
-                title=title,
-                content=content_html,
-                auto_publish=True,
-            )
-            print(f"\n  [+] Publish result: {json.dumps(result, ensure_ascii=False)}")
-        except Exception as e:
-            print(f"  [!] Publish failed: {e}", file=sys.stderr)
-            print("  [*] Article saved to output/, please publish manually")
+        index_path = build_daily_page(article, today_str, project_dir)
 
     print("")
     print("=" * 60)
     print("  DONE!")
     print(f"  Article: {article_path}")
+    print(f"  Deploy:  Push to main → GitHub Pages auto-deploys")
     print("=" * 60)
-
-
-def _extract_title(article: str) -> str:
-    """从 Markdown 文章中提取标题"""
-    today = datetime.now().strftime("%m月%d日")
-    for line in article.split("\n"):
-        line = line.strip()
-        if line.startswith("# "):
-            return line[2:].strip()
-    return f"GitHub 热榜日报 — {today}"
-
-
-def _md_to_wechat_html(md_text: str) -> str:
-    """将 Markdown 转为微信公众号兼容的 HTML"""
-    # 简单转换（如果需要更丰富的格式，可接入 mistune 等库）
-    lines = md_text.split("\n")
-    html_lines = []
-    in_paragraph = False
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            if in_paragraph:
-                html_lines.append("</p>")
-                in_paragraph = False
-            continue
-
-        if line.startswith("# "):
-            if in_paragraph:
-                html_lines.append("</p>")
-                in_paragraph = False
-            html_lines.append(f'<h1>{line[2:]}</h1>')
-        elif line.startswith("## "):
-            if in_paragraph:
-                html_lines.append("</p>")
-                in_paragraph = False
-            html_lines.append(f'<h2>{line[3:]}</h2>')
-        elif line == "---":
-            if in_paragraph:
-                html_lines.append("</p>")
-                in_paragraph = False
-            html_lines.append('<hr style="border:1px dashed #ddd;"/>')
-        elif line.startswith("- "):
-            if in_paragraph:
-                html_lines.append("</p>")
-                in_paragraph = False
-            html_lines.append(f"<li>{line[2:]}</li>")
-        else:
-            if not in_paragraph:
-                html_lines.append("<p>")
-                in_paragraph = True
-            else:
-                html_lines.append("<br/>")
-            # 简单加粗处理 **text**
-            line = line.replace("**", "<b>", 1).replace("**", "</b>", 1)
-            html_lines.append(line)
-
-    if in_paragraph:
-        html_lines.append("</p>")
-
-    return "\n".join(html_lines)
 
 
 def _fallback_article(repos: list[dict]) -> str:
@@ -188,7 +111,7 @@ def _fallback_article(repos: list[dict]) -> str:
         lines.append(f"> {r['description']}")
         lines.append("")
     lines.append("---")
-    lines.append("📬 **关注本号，每天上午 9 点获取 GitHub 热榜速递**")
+    lines.append("📬 关注公众号，菜单点击「今日热榜」随时查看 🚀")
     return "\n".join(lines)
 
 
