@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>6月30日热榜｜AI 工具和开发助手大爆发！</title>
+<meta name="description" content="GitHub Trending 每日热榜 - AI 自动整理 Top 10 开源项目">
+<title>2026年06月30日热榜｜AI 和安全工具引领潮流</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -13,255 +14,311 @@
     min-height: 100vh;
     padding: 20px;
   }
-  .container {
-    max-width: 700px;
-    margin: 0 auto;
-  }
-  .header {
+  .container { max-width: 760px; margin: 0 auto; }
+
+  .hero {
     text-align: center;
-    padding: 40px 20px 20px;
-  }
-  .header h1 {
-    font-size: 1.6rem;
-    color: #58a6ff;
-    margin-bottom: 6px;
-  }
-  .header .date {
-    font-size: 0.85rem;
-    color: #8b949e;
-  }
-  .header .subtitle {
-    font-size: 0.9rem;
-    color: #8b949e;
-    margin-top: 8px;
-    line-height: 1.6;
-  }
-  .intro {
-    background: #21262d;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 16px 20px;
+    padding: 50px 20px 24px;
+    border-bottom: 1px solid #21262d;
     margin-bottom: 20px;
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: #c9d1d9;
   }
-  .repo-card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 18px 20px;
-    margin-bottom: 14px;
-    transition: border-color 0.2s;
-  }
-  .repo-card:hover { border-color: #58a6ff; }
-  .repo-card .rank {
+  .hero .badge {
     display: inline-block;
-    background: #21262d;
+    background: #1f6feb33;
     color: #58a6ff;
+    font-size: 0.7rem;
     font-weight: 700;
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-right: 8px;
-    vertical-align: middle;
+    letter-spacing: 0.1em;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
   }
+  .hero h1 { font-size: 1.75rem; color: #f0f6fc; margin-bottom: 6px; line-height: 1.3; }
+  .hero .date { font-size: 0.85rem; color: #8b949e; margin-top: 4px; }
+  .hero .tagline { font-size: 0.82rem; color: #8b949e; margin-top: 10px; line-height: 1.6; max-width: 520px; margin: 10px auto 0; }
+
+  .stats {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+    margin: 24px 0 20px;
+  }
+  .stat-item { text-align: center; }
+  .stat-item .num { font-size: 1.5rem; font-weight: 700; color: #e3b341; }
+  .stat-item .label { font-size: 0.7rem; color: #8b949e; letter-spacing: .05em; margin-top: 2px; }
+
+  .category-bar {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin: 0 0 30px;
+  }
+  .category-bar .ctag {
+    font-size: 0.72rem; padding: 4px 12px; border-radius: 12px;
+    background: #21262d; color: #8b949e; border: 1px solid #30363d;
+  }
+
+  .section-title {
+    font-size: 0.95rem; color: #8b949e; margin: 30px 0 14px;
+    padding-bottom: 8px; border-bottom: 1px solid #21262d;
+  }
+
+  .repo-card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+    padding: 22px 24px; margin-bottom: 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .repo-card:hover { border-color: #58a6ff; box-shadow: 0 0 0 1px #58a6ff22; }
+
+  .repo-card .top-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .repo-card .rank {
+    background: #21262d; color: #58a6ff; font-weight: 800; font-size: .75rem;
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .repo-card .rank.t1 { background: #e3b341; color: #0d1117; }
+  .repo-card .rank.t2 { background: #adbac7; color: #0d1117; }
+  .repo-card .rank.t3 { background: #cd8b62; color: #0d1117; }
+
   .repo-card .name {
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #58a6ff;
-    text-decoration: none;
-    vertical-align: middle;
+    font-size: 1.05rem; font-weight: 600; color: #58a6ff; text-decoration: none; flex: 1;
   }
   .repo-card .name:hover { text-decoration: underline; }
-  .repo-card .meta {
-    margin-top: 8px;
-    font-size: 0.8rem;
-    color: #8b949e;
+  .repo-card .stars-badge {
+    background: #21262d; border: 1px solid #30363d; border-radius: 6px;
+    padding: 3px 12px; font-size: .8rem; color: #e3b341; font-weight: 600; flex-shrink: 0;
   }
-  .repo-card .meta span {
-    margin-right: 12px;
+
+  .repo-card .summary {
+    font-size: .92rem; color: #f0f6fc; margin-bottom: 12px; line-height: 1.6;
   }
-  .repo-card .meta .stars { color: #e3b341; }
-  .repo-card .meta .lang { color: #8b949e; }
-  .repo-card .desc {
-    margin-top: 8px;
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: #c9d1d9;
+
+  .repo-card .highlights {
+    list-style: none; margin: 10px 0 12px;
   }
-  .repo-card .suitable {
-    margin-top: 6px;
-    font-size: 0.8rem;
-    color: #8b949e;
-    font-style: italic;
+  .repo-card .highlights li {
+    font-size: .82rem; color: #c9d1d9; padding: 3px 0; line-height: 1.5;
   }
+  .repo-card .highlights li::before { content: "▸ "; color: #58a6ff; }
+
+  .repo-card .bottom-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid #21262d;
+  }
+  .repo-card .bottom-row .lang {
+    font-size: .75rem; color: #8b949e;
+  }
+  .repo-card .bottom-row .suitable {
+    font-size: .75rem; color: #8b949e; margin-left: auto;
+  }
+  .repo-card .bottom-row .suitable::before { content: "🎯 "; }
+
+  .repo-card .tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .repo-card .tags .tag {
+    font-size: .68rem; padding: 2px 8px; border-radius: 8px;
+    background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb33;
+  }
+
+  .editor-pick {
+    background: linear-gradient(135deg, #1a2332, #1a1f35);
+    border: 1px solid #e3b34144; border-left: 3px solid #e3b341;
+    border-radius: 10px; padding: 22px; margin: 28px 0 10px;
+  }
+  .editor-pick h3 { color: #e3b341; font-size: .9rem; margin-bottom: 10px; }
+  .editor-pick p { font-size: .88rem; line-height: 1.75; color: #c9d1d9; }
+
   .footer {
-    text-align: center;
-    padding: 30px 20px;
-    color: #484f58;
-    font-size: 0.8rem;
-    line-height: 1.8;
+    text-align: center; padding: 40px 20px 30px; color: #484f58;
+    font-size: .8rem; line-height: 2;
   }
-  .footer a {
-    color: #58a6ff;
-    text-decoration: none;
-  }
+  .footer a { color: #58a6ff; text-decoration: none; }
   .footer a:hover { text-decoration: underline; }
-  .divider {
-    border: none;
-    border-top: 1px solid #21262d;
-    margin: 12px 0;
-  }
-  .archive-link {
-    display: block;
-    text-align: center;
-    margin: 20px 0;
-    color: #58a6ff;
-    font-size: 0.85rem;
-  }
-  .star-btn {
-    display: inline-block;
-    background: #21262d;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 0.75rem;
-    color: #c9d1d9;
-    text-decoration: none;
-    margin-left: 8px;
-    vertical-align: middle;
-  }
-  .star-btn:hover { background: #30363d; color: #e3b341; }
+  .footer .cta { color: #c9d1d9; font-size: .9rem; margin-bottom: 12px; }
+
   @media (max-width: 500px) {
-    .header h1 { font-size: 1.3rem; }
+    .hero h1 { font-size: 1.25rem; }
     .repo-card { padding: 14px 16px; }
+    .stats { gap: 16px; }
+    .stat-item .num { font-size: 1.2rem; }
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <h1>🔥 GitHub 热榜日报</h1>
-    <div class="date">2026 年 06 月 30 日</div>
-    <div class="subtitle">每天上午 9:00 自动更新 &middot; AI 整理 Top 10</div>
+
+  <div class="hero">
+    <div class="badge">Daily Trending</div>
+    <h1>2026年06月30日热榜｜AI 和安全工具引领潮流</h1>
+    <div class="date">2026 年 06 月 30 日 · 每天 9:00 自动更新</div>
+    <div class="tagline">AI 自动抓取 GitHub Trending Top 10，逐个项目提炼亮点、领域标签和适用场景，三分钟看完今日开源动态。</div>
   </div>
-  <div class="intro">📊 今天的 GitHub 热榜中，AI 相关项目和开发助手类工具占据了大部分位置，尤其是 `msitarzewski/agency-agents` 项目，以其全面的 AI 代理工具箱，吸引了众多开发者的关注。同时，`ripienaar/free-for-dev` 项目为开发者提供了丰富的免费开发资源，也非常受欢迎。 🔹 #1. strix ⭐ 今日 +395 stars  |  🔧 Python > Open-source AI 渗透测试工具，帮助找到并修复应用程序漏洞。 🎯 适合：安全开发人员和测试人员 🔹 #2. agency-agents ⭐ 今日 +1425 stars  |  🔧 She</div>
+
   
-<p style="line-height:1.8;margin:8px 0;">
-今天的 GitHub 热榜中，AI 相关项目和开发助手类工具占据了大部分位置，尤其是 `msitarzewski/agency-agents` 项目，以其全面的 AI 代理工具箱，吸引了众多开发者的关注。同时，`ripienaar/free-for-dev` 项目为开发者提供了丰富的免费开发资源，也非常受欢迎。
-</p>
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #1. strix
-<br>
-⭐ 今日 +395 stars  |  🔧 Python
-<br>
-> Open-source AI 渗透测试工具，帮助找到并修复应用程序漏洞。
-<br>
-🎯 适合：安全开发人员和测试人员
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #2. agency-agents
-<br>
-⭐ 今日 +1425 stars  |  🔧 Shell
-<br>
-> 一个完整的 AI 代理工具箱，包含从前端向导到 Reddit 社区忍者等各类专家。
-<br>
-🎯 适合：开发者和 DevOps 团队
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #3. FluidVoice
-<br>
-⭐ 今日 +830 stars  |  🔧 Swift
-<br>
-> 最快的 macOS 离线语音转文本应用，完全本地运行。
-<br>
-🎯 适合：macOS 用户和开发者
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #4. OmniRoute
-<br>
-⭐ 今日 +617 stars  |  🔧 TypeScript
-<br>
-> 免费的 AI 网关，提供 160+ 个服务提供商，支持 Claude Code、Codex 等。
-<br>
-🎯 适合：开发者和 AI 研究人员
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #5. video-use
-<br>
-⭐ 今日 +967 stars  |  🔧 Python
-<br>
-> 使用编码代理编辑视频的工具。
-<br>
-🎯 适合：视频编辑师和开发者
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #6. ai-berkshire
-<br>
-⭐ 今日 +1386 stars  |  🔧 Python
-<br>
-> 基于 Claude Code/Codex 的价值投资研究框架，集成了四大师方法论和多Agent并行研究。
-<br>
-🎯 适合：金融分析师和 AI 研究人员
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #7. cupp
-<br>
-⭐ 今日 +18 stars  |  🔧 Python
-<br>
-> 普通用户密码分析工具。
-<br>
-🎯 适合：安全研究人员
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #8. free-for-dev
-<br>
-⭐ 今日 +1935 stars  |  🔧 HTML
-<br>
-> 列出了有趣的 SaaS、PaaS 和 IaaS 免费层服务，适合 DevOps 和基础设施开发。
-<br>
-🎯 适合：开发者和 DevOps 团队
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #9. agents-cli
-<br>
-⭐ 今日 +433 stars  |  🔧 Python
-<br>
-> 将任何编码助手转换为在 Google Cloud 上创建、评估和部署 AI 代理的专家工具。
-<br>
-🎯 适合：Google Cloud 用户和 AI 研究人员
-</p>
-<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">
-<p style="line-height:1.8;margin:8px 0;">
-🔹 #10. supervision
-<br>
-⭐ 今日 +336 stars  |  🔧 Python
-<br>
-> 为计算机视觉提供可重用的工具。
-<br>
-🎯 适合：计算机视觉开发者
-</p>
-<p style="line-height:1.8;margin:8px 0;">
-今日之星：`msitarzewski/agency-agents` 项目，以其创新性的 AI 代理工具箱，吸引了大量关注，值得开发者和 DevOps 团队进一步探索。
-</p>
-<p style="line-height:1.8;margin:8px 0;">
-关注本号，每天早上 9 点获取 GitHub 热榜速递 🚀
-</p>
-  <hr class="divider">
+    <div class="stats">
+      <div class="stat-item"><div class="num">10</div><div class="label">上榜项目</div></div>
+      <div class="stat-item"><div class="num">8,342</div><div class="label">今日总 Star</div></div>
+      <div class="stat-item"><div class="num">13</div><div class="label">涉及领域</div></div>
+    </div>
+  <div class="category-bar"><span class="ctag">AI/大模型</span><span class="ctag">安全</span><span class="ctag">自动化</span><span class="ctag">数据分析</span><span class="ctag">AI Agent</span></div>
+
+  <div class="section-title">📋 今日 Top 10</div>
+
+  
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t1">1</div>
+        <a class="name" href="https://github.com/usestrix/strix" target="_blank">usestrix/strix</a>
+        <span class="stars-badge">⭐ 395</span>
+      </div>
+      <div class="summary">开源 AI 渗透测试工具</div>
+      <ul class="highlights"><li>自动发现应用漏洞</li><li>支持多种 AI 模型</li><li>开源社区驱动</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">安全</span><span class="tag">AI/大模型</span></div>
+        <span class="suitable">安全开发者和测试团队</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t2">2</div>
+        <a class="name" href="https://github.com/msitarzewski/agency-agents" target="_blank">msitarzewski/agency-agents</a>
+        <span class="stars-badge">⭐ 1,425</span>
+      </div>
+      <div class="summary">全功能 AI 代理平台</div>
+      <ul class="highlights"><li>多种 AI 代理可用</li><li>支持前端和后端开发</li><li>社区驱动和开源</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Shell</span>
+        <div class="tags"><span class="tag">AI Agent</span><span class="tag">自动化</span></div>
+        <span class="suitable">独立开发者和中小团队</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t3">3</div>
+        <a class="name" href="https://github.com/altic-dev/FluidVoice" target="_blank">altic-dev/FluidVoice</a>
+        <span class="stars-badge">⭐ 830</span>
+      </div>
+      <div class="summary">macOS 离线语音转文字应用</div>
+      <ul class="highlights"><li>快速准确的语音转文字</li><li>完全离线工作</li><li>开源社区支持</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Swift</span>
+        <div class="tags"><span class="tag">桌面应用</span><span class="tag">移动端</span></div>
+        <span class="suitable">macOS 用户和开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">4</div>
+        <a class="name" href="https://github.com/diegosouzapw/OmniRoute" target="_blank">diegosouzapw/OmniRoute</a>
+        <span class="stars-badge">⭐ 617</span>
+      </div>
+      <div class="summary">免费 AI 网关和 API 平台</div>
+      <ul class="highlights"><li>支持多种 AI 模型和提供商</li><li>智能自动回退和压缩</li><li>开源社区驱动</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 TypeScript</span>
+        <div class="tags"><span class="tag">AI/大模型</span><span class="tag">后端</span></div>
+        <span class="suitable">开发者和中小团队</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">5</div>
+        <a class="name" href="https://github.com/browser-use/video-use" target="_blank">browser-use/video-use</a>
+        <span class="stars-badge">⭐ 967</span>
+      </div>
+      <div class="summary">基于编码代理的视频编辑工具</div>
+      <ul class="highlights"><li>智能视频编辑和处理</li><li>支持多种编码代理</li><li>开源社区支持</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">多媒体</span><span class="tag">自动化</span></div>
+        <span class="suitable">视频编辑和处理开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">6</div>
+        <a class="name" href="https://github.com/xbtlin/ai-berkshire" target="_blank">xbtlin/ai-berkshire</a>
+        <span class="stars-badge">⭐ 1,386</span>
+      </div>
+      <div class="summary">基于 Claude Code/Codex 的价值投资研究框架</div>
+      <ul class="highlights"><li>支持多种投资策略和模型</li><li>智能多代理并行研究</li><li>开源社区驱动</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">AI/大模型</span><span class="tag">数据分析</span></div>
+        <span class="suitable">金融和投资开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">7</div>
+        <a class="name" href="https://github.com/Mebus/cupp" target="_blank">Mebus/cupp</a>
+        <span class="stars-badge">⭐ 18</span>
+      </div>
+      <div class="summary">常用密码分析和生成工具</div>
+      <ul class="highlights"><li>快速准确的密码分析</li><li>支持多种密码生成算法</li><li>开源社区支持</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">安全</span><span class="tag">命令行工具</span></div>
+        <span class="suitable">安全开发者和测试团队</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">8</div>
+        <a class="name" href="https://github.com/ripienaar/free-for-dev" target="_blank">ripienaar/free-for-dev</a>
+        <span class="stars-badge">⭐ 1,935</span>
+      </div>
+      <div class="summary">免费开发者工具和服务列表</div>
+      <ul class="highlights"><li>支持多种开发工具和服务</li><li>免费和开源社区驱动</li><li>持续更新和维护</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 HTML</span>
+        <div class="tags"><span class="tag">开发工具</span><span class="tag">文档/知识库</span></div>
+        <span class="suitable">开发者和中小团队</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">9</div>
+        <a class="name" href="https://github.com/google/agents-cli" target="_blank">google/agents-cli</a>
+        <span class="stars-badge">⭐ 433</span>
+      </div>
+      <div class="summary">Google Cloud AI 代理命令行工具</div>
+      <ul class="highlights"><li>支持多种 AI 代理和模型</li><li>智能创建、评估和部署</li><li>开源社区驱动</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">AI/大模型</span><span class="tag">云计算</span></div>
+        <span class="suitable">Google Cloud 开发者和团队</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">10</div>
+        <a class="name" href="https://github.com/roboflow/supervision" target="_blank">roboflow/supervision</a>
+        <span class="stars-badge">⭐ 336</span>
+      </div>
+      <div class="summary">计算机视觉工具和库</div>
+      <ul class="highlights"><li>支持多种计算机视觉任务</li><li>开源社区驱动和维护</li><li>易于使用和集成</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">AI/大模型</span><span class="tag">数据分析</span></div>
+        <span class="suitable">计算机视觉开发者和团队</span>
+      </div>
+    </div>
+
+  <div class="editor-pick">
+      <h3>⭐ 今日之星</h3>
+      <p>strix 是一个开源的 AI 渗透测试工具，能够帮助开发者自动发现应用中的漏洞。这个工具使用了 AI 技术来分析应用的代码和行为，能够快速准确地发现潜在的安全风险。strix 是一个非常有用的工具，能够帮助开发者提高应用的安全性。
+
+如果你对这些项目感兴趣，可以前往 GitHub 查看更多信息和源代码。同时，也可以参与到这些项目的开发和维护中，贡献自己的力量。记住，开源社区的力量是非常强大的，我们可以通过合作和分享来实现更多的可能性。
+
+关注「GitHub 热榜日报」，每天都能发现新的和有趣的开源项目。同时，也可以在评论区分享你自己的开源项目和经验，和其他开发者一起交流和学习。让我们一起推动</p>
+    </div>
+
   <div class="footer">
-    <p>📬 关注公众号 <strong>星探日报</strong>，菜单点击「今日热榜」随时查看</p>
-    <p>Powered by <a href="https://github.com/MRJI55/github-trending-wechat">GitHub Actions</a> &middot; AI by GitHub Models</p>
-    <p><a href="./archive/">📁 历史归档</a></p>
+    <div class="cta">📬 关注公众号 <strong>星探日报</strong>，底部菜单「今日热榜」随时查看</div>
+    <p>Powered by <a href="https://github.com/MRJI55/github-trending-wechat">GitHub Actions</a> · AI by <a href="https://github.com/marketplace/models">GitHub Models (Llama 3.3)</a> · Hosted on <a href="https://pages.github.com">GitHub Pages</a></p>
+    <p><a href="./archive/">📁 历史归档</a> · <a href="https://github.com/MRJI55/github-trending-wechat">⭐ Star on GitHub</a></p>
+    <p style="font-size:.7rem;margin-top:8px;">最后更新：2026-06-30 13:10 UTC</p>
   </div>
+
 </div>
 </body>
 </html>
