@@ -12,16 +12,9 @@ import os
 import sys
 import json
 import argparse
-import io
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(__file__))
-# Fix encoding on Windows (GitHub Actions runner uses UTF-8 natively)
-try:
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
-except (AttributeError, ValueError):
-    pass
 
 from fetch_trending import fetch_trending
 

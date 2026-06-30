@@ -107,13 +107,6 @@ def fetch_trending(top_n: int = 10, output_path: Optional[str] = None) -> list[d
     Returns:
         list[dict]: 项目数据列表
     """
-    import io
-    try:
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
-    except (AttributeError, ValueError):
-        pass
-
     print(f"[{datetime.now().isoformat()}] Fetching GitHub Trending...")
 
     try:
