@@ -1,375 +1,306 @@
 """
-将生成的 Markdown 文章转为精美网页，部署到 GitHub Pages。
-
-输出:
-  docs/index.html          — 今日热榜（首页）
-  docs/archive/20260630.html  — 历史归档
+将 AI 增强的 repo 数据 + Markdown 文章转为精美网页。
 """
 
 import os
 import re
-import json
-import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 
-
-HTML_TEMPLATE = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title}</title>
-<style>
-  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{
+CSS = """
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
     color: #c9d1d9;
     min-height: 100vh;
     padding: 20px;
-  }}
-  .container {{
-    max-width: 700px;
-    margin: 0 auto;
-  }}
-  .header {{
-    text-align: center;
-    padding: 40px 20px 20px;
-  }}
-  .header h1 {{
-    font-size: 1.6rem;
-    color: #58a6ff;
-    margin-bottom: 6px;
-  }}
-  .header .date {{
-    font-size: 0.85rem;
-    color: #8b949e;
-  }}
-  .header .subtitle {{
-    font-size: 0.9rem;
-    color: #8b949e;
-    margin-top: 8px;
-    line-height: 1.6;
-  }}
-  .intro {{
-    background: #21262d;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: #c9d1d9;
-  }}
-  .repo-card {{
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 18px 20px;
-    margin-bottom: 14px;
-    transition: border-color 0.2s;
-  }}
-  .repo-card:hover {{ border-color: #58a6ff; }}
-  .repo-card .rank {{
-    display: inline-block;
-    background: #21262d;
-    color: #58a6ff;
-    font-weight: 700;
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-right: 8px;
-    vertical-align: middle;
-  }}
-  .repo-card .name {{
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: #58a6ff;
-    text-decoration: none;
-    vertical-align: middle;
-  }}
-  .repo-card .name:hover {{ text-decoration: underline; }}
-  .repo-card .meta {{
-    margin-top: 8px;
-    font-size: 0.8rem;
-    color: #8b949e;
-  }}
-  .repo-card .meta span {{
-    margin-right: 12px;
-  }}
-  .repo-card .meta .stars {{ color: #e3b341; }}
-  .repo-card .meta .lang {{ color: #8b949e; }}
-  .repo-card .desc {{
-    margin-top: 8px;
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: #c9d1d9;
-  }}
-  .repo-card .suitable {{
-    margin-top: 6px;
-    font-size: 0.8rem;
-    color: #8b949e;
-    font-style: italic;
-  }}
-  .footer {{
-    text-align: center;
-    padding: 30px 20px;
-    color: #484f58;
-    font-size: 0.8rem;
-    line-height: 1.8;
-  }}
-  .footer a {{
-    color: #58a6ff;
-    text-decoration: none;
-  }}
-  .footer a:hover {{ text-decoration: underline; }}
-  .divider {{
-    border: none;
-    border-top: 1px solid #21262d;
-    margin: 12px 0;
-  }}
-  .archive-link {{
-    display: block;
-    text-align: center;
-    margin: 20px 0;
-    color: #58a6ff;
-    font-size: 0.85rem;
-  }}
-  .star-btn {{
-    display: inline-block;
-    background: #21262d;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 0.75rem;
-    color: #c9d1d9;
-    text-decoration: none;
-    margin-left: 8px;
-    vertical-align: middle;
-  }}
-  .star-btn:hover {{ background: #30363d; color: #e3b341; }}
-  @media (max-width: 500px) {{
-    .header h1 {{ font-size: 1.3rem; }}
-    .repo-card {{ padding: 14px 16px; }}
-  }}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="header">
-    <h1>🔥 GitHub 热榜日报</h1>
-    <div class="date">{date_display}</div>
-    <div class="subtitle">每天上午 9:00 自动更新 &middot; AI 整理 Top 10</div>
-  </div>
-  {intro_html}
-  {cards_html}
-  <hr class="divider">
-  <div class="footer">
-    <p>📬 关注公众号 <strong>星探日报</strong>，菜单点击「今日热榜」随时查看</p>
-    <p>Powered by <a href="https://github.com/MRJI55/github-trending-wechat">GitHub Actions</a> &middot; AI by GitHub Models</p>
-    <p><a href="./archive/">📁 历史归档</a></p>
-  </div>
-</div>
-</body>
-</html>"""
+  }
+  .container { max-width: 760px; margin: 0 auto; }
 
-
-ARCHIVE_INDEX_TEMPLATE = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>历史归档 - GitHub 热榜日报</title>
-<style>
-  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0d1117;
-    color: #c9d1d9;
-    min-height: 100vh;
-    padding: 20px;
-  }}
-  .container {{ max-width: 600px; margin: 0 auto; }}
-  h1 {{ color: #58a6ff; text-align: center; margin: 30px 0 20px; }}
-  a {{ color: #58a6ff; text-decoration: none; }}
-  a:hover {{ text-decoration: underline; }}
-  .archive-item {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
+  .hero {
+    text-align: center;
+    padding: 50px 20px 24px;
     border-bottom: 1px solid #21262d;
-  }}
-  .archive-item .link {{ font-size: 0.95rem; }}
-  .archive-item .date {{ font-size: 0.8rem; color: #8b949e; }}
-  .back {{ text-align: center; margin: 20px; }}
-</style>
-</head>
-<body>
-<div class="container">
-  <h1>📁 历史归档</h1>
-  {archive_items}
-  <div class="back"><a href="../">← 返回今日热榜</a></div>
-</div>
-</body>
-</html>"""
+    margin-bottom: 20px;
+  }
+  .hero .badge {
+    display: inline-block;
+    background: #1f6feb33;
+    color: #58a6ff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .hero h1 { font-size: 1.75rem; color: #f0f6fc; margin-bottom: 6px; line-height: 1.3; }
+  .hero .date { font-size: 0.85rem; color: #8b949e; margin-top: 4px; }
+  .hero .tagline { font-size: 0.82rem; color: #8b949e; margin-top: 10px; line-height: 1.6; max-width: 520px; margin: 10px auto 0; }
+
+  .stats {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+    margin: 24px 0 20px;
+  }
+  .stat-item { text-align: center; }
+  .stat-item .num { font-size: 1.5rem; font-weight: 700; color: #e3b341; }
+  .stat-item .label { font-size: 0.7rem; color: #8b949e; letter-spacing: .05em; margin-top: 2px; }
+
+  .category-bar {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin: 0 0 30px;
+  }
+  .category-bar .ctag {
+    font-size: 0.72rem; padding: 4px 12px; border-radius: 12px;
+    background: #21262d; color: #8b949e; border: 1px solid #30363d;
+  }
+
+  .section-title {
+    font-size: 0.95rem; color: #8b949e; margin: 30px 0 14px;
+    padding-bottom: 8px; border-bottom: 1px solid #21262d;
+  }
+
+  .repo-card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+    padding: 22px 24px; margin-bottom: 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .repo-card:hover { border-color: #58a6ff; box-shadow: 0 0 0 1px #58a6ff22; }
+
+  .repo-card .top-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .repo-card .rank {
+    background: #21262d; color: #58a6ff; font-weight: 800; font-size: .75rem;
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .repo-card .rank.t1 { background: #e3b341; color: #0d1117; }
+  .repo-card .rank.t2 { background: #adbac7; color: #0d1117; }
+  .repo-card .rank.t3 { background: #cd8b62; color: #0d1117; }
+
+  .repo-card .name {
+    font-size: 1.05rem; font-weight: 600; color: #58a6ff; text-decoration: none; flex: 1;
+  }
+  .repo-card .name:hover { text-decoration: underline; }
+  .repo-card .stars-badge {
+    background: #21262d; border: 1px solid #30363d; border-radius: 6px;
+    padding: 3px 12px; font-size: .8rem; color: #e3b341; font-weight: 600; flex-shrink: 0;
+  }
+
+  .repo-card .summary {
+    font-size: .92rem; color: #f0f6fc; margin-bottom: 12px; line-height: 1.6;
+  }
+
+  .repo-card .highlights {
+    list-style: none; margin: 10px 0 12px;
+  }
+  .repo-card .highlights li {
+    font-size: .82rem; color: #c9d1d9; padding: 3px 0; line-height: 1.5;
+  }
+  .repo-card .highlights li::before { content: "▸ "; color: #58a6ff; }
+
+  .repo-card .bottom-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid #21262d;
+  }
+  .repo-card .bottom-row .lang {
+    font-size: .75rem; color: #8b949e;
+  }
+  .repo-card .bottom-row .suitable {
+    font-size: .75rem; color: #8b949e; margin-left: auto;
+  }
+  .repo-card .bottom-row .suitable::before { content: "🎯 "; }
+
+  .repo-card .tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .repo-card .tags .tag {
+    font-size: .68rem; padding: 2px 8px; border-radius: 8px;
+    background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb33;
+  }
+
+  .editor-pick {
+    background: linear-gradient(135deg, #1a2332, #1a1f35);
+    border: 1px solid #e3b34144; border-left: 3px solid #e3b341;
+    border-radius: 10px; padding: 22px; margin: 28px 0 10px;
+  }
+  .editor-pick h3 { color: #e3b341; font-size: .9rem; margin-bottom: 10px; }
+  .editor-pick p { font-size: .88rem; line-height: 1.75; color: #c9d1d9; }
+
+  .footer {
+    text-align: center; padding: 40px 20px 30px; color: #484f58;
+    font-size: .8rem; line-height: 2;
+  }
+  .footer a { color: #58a6ff; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .footer .cta { color: #c9d1d9; font-size: .9rem; margin-bottom: 12px; }
+
+  @media (max-width: 500px) {
+    .hero h1 { font-size: 1.25rem; }
+    .repo-card { padding: 14px 16px; }
+    .stats { gap: 16px; }
+    .stat-item .num { font-size: 1.2rem; }
+  }
+"""
+
+ARCHIVE_CSS = """
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:#0d1117; color:#c9d1d9; min-height:100vh; padding:20px; }
+  .container { max-width:600px; margin:0 auto; }
+  h1 { color:#58a6ff; text-align:center; margin:30px 0 20px; }
+  a { color:#58a6ff; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .archive-item { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid #21262d; transition:background .15s; }
+  .archive-item:hover { background:#161b22; }
+  .archive-item a { font-size:.95rem; }
+  .archive-item .date { font-size:.8rem; color:#8b949e; }
+  .back { text-align:center; margin:30px; }
+"""
 
 
-ARTICLE_PAGE_TEMPLATE = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title}</title>
-<style>
-  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0d1117;
-    color: #c9d1d9;
-    min-height: 100vh;
-    padding: 20px;
-  }}
-  .container {{ max-width: 700px; margin: 0 auto; }}
-  .back {{ text-align: center; margin: 10px 0 20px; }}
-  .back a {{ color: #58a6ff; text-decoration: none; font-size: 0.85rem; }}
-  .back a:hover {{ text-decoration: underline; }}
-  {extra_css}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="back"><a href="../../">← 返回热榜</a> | <a href="../">← 归档</a></div>
-  {body_html}
-</div>
-</body>
-</html>"""
-
-
-def md_to_html(md_text: str) -> str:
-    """极简 Markdown → HTML 转换"""
-    lines = md_text.split("\n")
-    html = []
-    in_p = False
-    in_list = False
-
-    def close_para():
-        nonlocal in_p, in_list
-        if in_p:
-            html.append("</p>")
-            in_p = False
-        if in_list:
-            html.append("</ul>")
-            in_list = False
-
-    for line in lines:
-        stripped = line.strip()
-
-        if not stripped:
-            close_para()
-            continue
-
-        if stripped.startswith("# "):
-            close_para()
-            html.append(f'<h1 style="color:#58a6ff;margin:20px 0 10px;font-size:1.4rem;">{stripped[2:]}</h1>')
-        elif stripped.startswith("## "):
-            close_para()
-            html.append(f'<h2 style="color:#e6edf3;margin:16px 0 8px;font-size:1.1rem;">{stripped[3:]}</h2>')
-        elif stripped == "---":
-            close_para()
-            html.append('<hr style="border:none;border-top:1px solid #30363d;margin:16px 0;">')
-        elif stripped.startswith("- "):
-            if not in_list:
-                html.append('<ul style="padding-left:20px;">')
-                in_list = True
-            html.append(f"<li>{_inline_format(stripped[2:])}</li>")
-        else:
-            if not in_p:
-                html.append('<p style="line-height:1.8;margin:8px 0;">')
-                in_p = True
-            else:
-                html.append("<br>")
-            html.append(_inline_format(stripped))
-
-    close_para()
-    return "\n".join(html)
-
-
-def _inline_format(text: str) -> str:
-    """处理行内格式：**加粗**、链接"""
-    # Bold
-    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
-    # Links: [text](url)
-    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank" style="color:#58a6ff;">\1</a>', text)
-    # Emoji preservation
-    return text
-
-
-def build_daily_page(article_md: str, today_str: str, output_dir: str) -> str:
-    """
-    将 Markdown 文章转成美观网页。
-
-    Returns: 生成的 index.html 路径
-    """
-    # Extract title and intro
-    lines = article_md.split("\n")
-    title = "GitHub 热榜日报"
-    intro_parts = []
-    cards_html = ""
-    in_intro = False
-
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("# "):
-            title = stripped[2:]
-            continue
-        if stripped == "---":
-            in_intro = False
-            continue
-        # Everything before first --- is intro
-        if not cards_html and not stripped.startswith("## ") and not stripped.startswith("- ") and stripped:
-            intro_parts.append(stripped)
-
-    # Build intro HTML
-    intro_html = ""
-    if intro_parts:
-        intro_text = " ".join(intro_parts)[:300]
-        intro_html = f'<div class="intro">📊 {intro_text}</div>'
-
-    # Build cards from the full Markdown body
-    body_html = md_to_html(article_md)
-    # Remove the title and intro from body (they're already in header/intro)
-    # Simple approach: just put full body after intro
-    # Actually, let's strip h1 from body
-    body_html = re.sub(r'<h1[^>]*>.*?</h1>', '', body_html, count=1)
-
+def build_daily_page(
+    article_md: str,
+    repo_details: list[dict],
+    repos_raw: list[dict],
+    today_str: str,
+    output_dir: str,
+) -> str:
+    """构建今日热榜首页"""
     today_fmt = datetime.strptime(today_str, "%Y%m%d").strftime("%Y 年 %m 月 %d 日")
 
-    page = HTML_TEMPLATE.format(
-        title=title,
-        date_display=today_fmt,
-        intro_html=intro_html,
-        cards_html=body_html,
-    )
+    # Title from article
+    title = "GitHub 热榜日报"
+    for line in article_md.split("\n"):
+        if line.strip().startswith("# "):
+            title = line.strip()[2:]
+            break
 
-    # Ensure output dirs
+    # Stats
+    total_stars = sum(r.get("stars_today", 0) or 0 for r in repos_raw)
+    cats = {}
+    for d in repo_details:
+        for c in d.get("category", "其他").split(","):
+            c = c.strip()
+            if c: cats[c] = cats.get(c, 0) + 1
+    top_cats = sorted(cats, key=cats.get, reverse=True)[:5]
+
+    stats_html = f"""
+    <div class="stats">
+      <div class="stat-item"><div class="num">{len(repos_raw)}</div><div class="label">上榜项目</div></div>
+      <div class="stat-item"><div class="num">{total_stars:,}</div><div class="label">今日总 Star</div></div>
+      <div class="stat-item"><div class="num">{len(cats)}</div><div class="label">涉及领域</div></div>
+    </div>"""
+
+    cat_html = '<div class="category-bar">' + ''.join(
+        f'<span class="ctag">{c}</span>' for c in top_cats
+    ) + '</div>'
+
+    # Repo cards
+    cards = ""
+    for i, d in enumerate(repo_details):
+        rank = d.get("rank", i + 1)
+        rc = ""
+        if rank == 1: rc = "t1"
+        elif rank == 2: rc = "t2"
+        elif rank == 3: rc = "t3"
+
+        raw = repos_raw[i] if i < len(repos_raw) else {}
+        name = raw.get("full_name", "unknown/repo")
+        url = raw.get("url", "#")
+        stars = raw.get("stars_today", 0) or 0
+        lang = raw.get("language", "")
+
+        summary = d.get("cn_summary", "")
+        highlights = d.get("highlights", [])
+        suitable = d.get("suitable_for", "")
+        category = d.get("category", "")
+
+        hl_html = "".join(f"<li>{h}</li>" for h in highlights[:3]) if highlights else ""
+        tags_html = "".join(
+            f'<span class="tag">{t.strip()}</span>'
+            for t in category.split(",") if t.strip()
+        ) if category else ""
+        lang_html = f'<span class="lang">🔧 {lang}</span>' if lang else ""
+        suit_html = f'<span class="suitable">{suitable}</span>' if suitable else ""
+
+        cards += f"""
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank {rc}">{rank}</div>
+        <a class="name" href="{url}" target="_blank">{name}</a>
+        <span class="stars-badge">⭐ {stars:,}</span>
+      </div>
+      <div class="summary">{summary}</div>
+      {('<ul class="highlights">' + hl_html + '</ul>') if hl_html else ''}
+      <div class="bottom-row">
+        {lang_html}
+        <div class="tags">{tags_html}</div>
+        {suit_html}
+      </div>
+    </div>"""
+
+    # Editor's pick = #1 project
+    # Try to extract editor pick text from article
+    pick_html = ""
+    pick_match = re.search(r'今日之星[^\n]*\n(.*?)(?:\n---|\n#|\Z)', article_md, re.DOTALL)
+    if pick_match:
+        pick_text = pick_match.group(1).strip()[:300]
+        pick_html = f"""<div class="editor-pick">
+      <h3>⭐ 今日之星</h3>
+      <p>{pick_text}</p>
+    </div>"""
+
+    page = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="GitHub Trending 每日热榜 - AI 自动整理 Top 10 开源项目">
+<title>{title}</title>
+<style>{CSS}</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="badge">Daily Trending</div>
+    <h1>{title}</h1>
+    <div class="date">{today_fmt} · 每天 9:00 自动更新</div>
+    <div class="tagline">AI 自动抓取 GitHub Trending Top 10，逐个项目提炼亮点、领域标签和适用场景，三分钟看完今日开源动态。</div>
+  </div>
+
+  {stats_html}
+  {cat_html}
+
+  <div class="section-title">📋 今日 Top {len(repos_raw)}</div>
+
+  {cards}
+
+  {pick_html}
+
+  <div class="footer">
+    <div class="cta">📬 关注公众号 <strong>星探日报</strong>，底部菜单「今日热榜」随时查看</div>
+    <p>Powered by <a href="https://github.com/MRJI55/github-trending-wechat">GitHub Actions</a> · AI by <a href="https://github.com/marketplace/models">GitHub Models (Llama 3.3)</a> · Hosted on <a href="https://pages.github.com">GitHub Pages</a></p>
+    <p><a href="./archive/">📁 历史归档</a> · <a href="https://github.com/MRJI55/github-trending-wechat">⭐ Star on GitHub</a></p>
+    <p style="font-size:.7rem;margin-top:8px;">最后更新：{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC</p>
+  </div>
+
+</div>
+</body>
+</html>"""
+
     docs_dir = os.path.join(output_dir, "docs")
     archive_dir = os.path.join(docs_dir, "archive")
     os.makedirs(archive_dir, exist_ok=True)
 
-    # Write today's page as index.html
     index_path = os.path.join(docs_dir, "index.html")
     with open(index_path, "w", encoding="utf-8") as f:
-        f.write(page.encode("ascii", "xmlcharrefreplace").decode("ascii")
-                if all(ord(c) < 128 for c in page) else page)
+        f.write(page)
 
-    # Also save to archive
+    # Archive copy
     archive_path = os.path.join(archive_dir, f"{today_str}.html")
-    archive_page = build_archive_article(article_md, today_str)
     with open(archive_path, "w", encoding="utf-8") as f:
-        f.write(archive_page)
+        f.write(page)
 
-    # Update archive index
     _update_archive_index(archive_dir)
 
     print(f"  [+] Page saved: {index_path}")
@@ -377,62 +308,63 @@ def build_daily_page(article_md: str, today_str: str, output_dir: str) -> str:
     return index_path
 
 
-def build_archive_article(article_md: str, date_str: str) -> str:
-    """构建归档文章页"""
-    body = md_to_html(article_md)
-    title = "GitHub 热榜日报"
-    for line in article_md.split("\n"):
-        if line.strip().startswith("# "):
-            title = line.strip()[2:]
-            break
-
-    return ARTICLE_PAGE_TEMPLATE.format(
-        title=title,
-        extra_css="",
-        body_html=body,
-    )
-
-
 def _update_archive_index(archive_dir: str):
-    """更新归档首页"""
     files = sorted(
         [f for f in os.listdir(archive_dir) if f.endswith(".html") and f != "index.html"],
         reverse=True,
     )
-
     items = ""
     for f in files:
-        date_str = f.replace(".html", "")
+        ds = f.replace(".html", "")
         try:
-            dt = datetime.strptime(date_str, "%Y%m%d")
-            label = dt.strftime("%m 月 %d 日")
+            label = datetime.strptime(ds, "%Y%m%d").strftime("%m 月 %d 日")
         except ValueError:
-            label = date_str
-        items += f'<div class="archive-item"><a class="link" href="{f}">{label} 热榜</a><span class="date">{date_str}</span></div>\n'
+            label = ds
+        items += f'<div class="archive-item"><a href="{f}">{label} 热榜日报</a><span class="date">{ds}</span></div>\n'
 
-    page = ARCHIVE_INDEX_TEMPLATE.format(archive_items=items)
-
-    idx_path = os.path.join(archive_dir, "index.html")
-    with open(idx_path, "w", encoding="utf-8") as f:
+    page = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>历史归档 - GitHub 热榜日报</title>
+<style>{ARCHIVE_CSS}</style>
+</head>
+<body>
+<div class="container">
+  <h1>📁 历史归档</h1>
+  {items}
+  <div class="back"><a href="../">&larr; 返回今日热榜</a></div>
+</div>
+</body>
+</html>"""
+    with open(os.path.join(archive_dir, "index.html"), "w", encoding="utf-8") as f:
         f.write(page)
 
 
 if __name__ == "__main__":
-    test_md = """# 6月30日热榜 | AI 工具今天又炸了
-
-今天的热榜非常有意思，AI Agent 类项目占据了半壁江山。
-
----
-
-## 1. [example/awesome-project](https://github.com/example/awesome-project)
-⭐ 今日 +2000 stars | 🔧 Python
-> 一个超级好用的 AI Agent 框架
-
-🎯 适合：AI 开发者
-
----
-
-📬 关注公众号，每天早上 9 点获取热榜速递 🚀"""
-
-    build_daily_page(test_md, "20260630", os.path.dirname(os.path.dirname(__file__)))
+    test_details = [
+        {"rank": 1, "cn_summary": "拖拽式构建LLM工作流的低代码平台",
+         "highlights": ["支持100+模型接入", "可视化RAG管道", "一键部署为API"],
+         "suitable_for": "想快速搭建AI应用的独立开发者",
+         "category": "AI Agent, 自动化"},
+        {"rank": 2, "cn_summary": "Rust重写的下一代终端文件管理器",
+         "highlights": ["比传统方案快5倍", "支持多窗口和语法高亮", "原生Git集成"],
+         "suitable_for": "Rust爱好者和命令行重度用户",
+         "category": "命令行工具, 开源替代品"},
+        {"rank": 3, "cn_summary": "Anthropic官方AI开发教程合集",
+         "highlights": ["覆盖Prompt Engineering", "完整可运行Notebook", "Tool Use实战"],
+         "suitable_for": "想系统学习AI开发的程序员",
+         "category": "AI/大模型, 文档/知识库"},
+    ]
+    test_raw = [
+        {"rank": 1, "full_name": "langflow-ai/langflow", "url": "https://github.com/langflow-ai/langflow",
+         "language": "Python", "stars_today": 3000, "description": "Low-code AI builder"},
+        {"rank": 2, "full_name": "rustic-rs/rustic", "url": "https://github.com/rustic-rs/rustic",
+         "language": "Rust", "stars_today": 1800, "description": "Terminal file manager"},
+        {"rank": 3, "full_name": "anthropics/courses", "url": "https://github.com/anthropics/courses",
+         "language": "Jupyter Notebook", "stars_today": 1500, "description": "AI tutorials"},
+    ]
+    build_daily_page("# Test Title\n\nIntro paragraph here.", test_details, test_raw, "20260630",
+                     os.path.dirname(os.path.dirname(__file__)))
     print("Test page built!")

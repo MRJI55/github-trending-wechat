@@ -1,69 +1,50 @@
 """
-调用 GitHub Models API（免费）生成微信公众号文章。
+调用 GitHub Models API 生成增强文章。
 
-GitHub Models: https://github.com/marketplace/models
-兼容 OpenAI SDK，使用 GitHub Token 鉴权，完全免费。
+输出: (repo_details, article_markdown)
+- repo_details: 每个项目的结构化数据（亮点、标签、适用人群）
+- article_markdown: 完整 Markdown 文章
 """
 
 import os
 import json
+import re
 import sys
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 from openai import OpenAI
 
-# GitHub Models 免费端点
 GITHUB_MODELS_ENDPOINT = "https://models.inference.ai.azure.com"
-
-# 免费模型（按中文能力排序推荐）
-# Llama-3.3-70B-Instruct: Meta 旗舰，中文优秀
-# Mistral-Large: 欧洲最强，多语言出色
-# Phi-4: 微软出品，轻量快速
 DEFAULT_MODEL = "Llama-3.3-70B-Instruct"
 
 
 def load_prompt_template() -> str:
-    """从 templates/prompt.md 读取 system prompt"""
     base_dirs = [
-        os.path.dirname(os.path.dirname(__file__)),  # src/ 的上级
-        os.path.dirname(__file__),                   # src/
-        os.getcwd(),                                  # 当前工作目录
+        os.path.dirname(os.path.dirname(__file__)),
+        os.path.dirname(__file__),
+        os.getcwd(),
     ]
     for base in base_dirs:
         prompt_path = os.path.join(base, "templates", "prompt.md")
         if os.path.exists(prompt_path):
             with open(prompt_path, "r", encoding="utf-8") as f:
                 return f.read()
-
     return _default_prompt()
 
 
 def _default_prompt() -> str:
-    return """你是一位资深的科技编辑，负责撰写「GitHub 热榜日报」微信公众号文章。
+    return """你是一位资深科技编辑。为每个 GitHub Trending 项目提供增强信息和文章。
 
-你的任务是：根据给定的 GitHub Trending Top 10 数据，撰写一篇结构清晰、易读的文章。
+输出格式：先输出 JSON，再用 ===ARTICLE=== 分隔，然后输出文章。
 
-## 格式要求
+```json
+{"repos":[{"rank":1,"cn_summary":"...","highlights":["...","...","..."],"suitable_for":"...","category":"..."}]}
+```
 
-1. **标题**：吸引眼球，包含当天日期，字数不超过20字
-2. **导语**（2-3句）：概述今天的整体趋势和亮点
-3. **正文**：每个项目一个卡片式摘要，包含：
-   - 项目名称 + 链接
-   - ⭐ 今日新增 Star 数
-   - 一句话简介（用通俗语言解释它是干什么的）
-   - 🔖 适用人群 / 使用场景
-4. **结尾**：一句话引导关注
+===ARTICLE===
 
-## 排版要求
-
-- 使用公众号常用的排版格式
-- 每个项目之间用分割线隔开
-- 重要信息用加粗或 emoji 突出
-- 全文 800-1500 字
-
-## 输出格式
-
-直接输出文章内容（Markdown 格式），不要包含额外的说明文字。"""
+# 今日标题
+..."""
 
 
 def generate_article(
@@ -71,25 +52,16 @@ def generate_article(
     api_key: Optional[str] = None,
     model: str = DEFAULT_MODEL,
     output_path: Optional[str] = None,
-) -> str:
+) -> Tuple[list[dict], str]:
     """
-    调用 GitHub Models API 生成公众号文章。
-
-    Args:
-        repos: 从 fetch_trending 获取的项目列表
-        api_key: GitHub Token（默认从 GITHUB_TOKEN 环境变量读取）
-        model: 使用的模型 ID（免费模型列表见 DEFAULT_MODEL 上方注释）
-        output_path: 保存文章的路径（可选）
-
     Returns:
-        str: 生成的文章内容 (Markdown)
+        (repo_details, article_markdown)
+        - repo_details: enriched per-repo structured data
+        - article_markdown: full markdown article
     """
     api_key = api_key or os.environ.get("GITHUB_TOKEN")
     if not api_key:
-        raise ValueError(
-            "GITHUB_TOKEN not set. Set environment variable or pass api_key parameter.\n"
-            "Get your token: https://github.com/settings/tokens"
-        )
+        raise ValueError("GITHUB_TOKEN not set.")
 
     repos_text = _format_repos_for_prompt(repos)
     today = datetime.now().strftime("%Y年%m月%d日")
@@ -99,18 +71,15 @@ def generate_article(
 
 {repos_text}
 
-请根据以上数据，撰写今日的 GitHub 热榜日报。"""
+请为每个项目生成增强信息（JSON）和完整文章（===ARTICLE=== 之后）。"""
 
     print(f"[{datetime.now().isoformat()}] Calling GitHub Models ({model})...")
 
-    client = OpenAI(
-        base_url=GITHUB_MODELS_ENDPOINT,
-        api_key=api_key,
-    )
+    client = OpenAI(base_url=GITHUB_MODELS_ENDPOINT, api_key=api_key)
 
     response = client.chat.completions.create(
         model=model,
-        max_tokens=3000,
+        max_tokens=3500,
         temperature=0.7,
         messages=[
             {"role": "system", "content": system_prompt},
@@ -118,22 +87,70 @@ def generate_article(
         ],
     )
 
-    article = response.choices[0].message.content
+    raw = response.choices[0].message.content
     usage = response.usage
 
-    print(f"  [+] Article generated: {len(article)} chars")
+    print(f"  [+] Response: {len(raw)} chars")
     print(f"  [+] Token usage: input={usage.prompt_tokens}, output={usage.completion_tokens}")
+
+    # Parse JSON + Article
+    repo_details, article = _parse_response(raw, repos)
 
     if output_path:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(article)
-        print(f"  [+] Saved to {output_path}")
+        print(f"  [+] Article saved to {output_path}")
 
-    return article
+    return repo_details, article
+
+
+def _parse_response(raw: str, repos: list[dict]) -> Tuple[list[dict], str]:
+    """从 AI 原始响应中分离 JSON 和文章"""
+    repo_details = []
+    article = raw
+
+    # Try to extract JSON block
+    json_match = re.search(r'```json\s*\n(.*?)\n```', raw, re.DOTALL)
+    if not json_match:
+        json_match = re.search(r'\{[\s\S]*"repos"[\s\S]*?\n\}', raw)
+    if not json_match:
+        # Try to find just a JSON object
+        json_match = re.search(r'\{[\s\S]*?"rank"[\s\S]*?"category"[\s\S]*?\}', raw)
+
+    if json_match:
+        json_str = json_match.group(1) if json_match.lastindex else json_match.group(0)
+        # Clean up trailing commas before ] or }
+        json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+        try:
+            data = json.loads(json_str)
+            if "repos" in data:
+                repo_details = data["repos"]
+                print(f"  [+] Parsed {len(repo_details)} enhanced repos from JSON")
+        except json.JSONDecodeError as e:
+            print(f"  [!] JSON parse failed: {e}, using fallback")
+
+    # Extract article (everything after ===ARTICLE===)
+    article_match = re.split(r'===ARTICLE===', raw, maxsplit=1)
+    if len(article_match) > 1:
+        article = article_match[1].strip()
+
+    # Fallback: enrich repos with basic info if AI didn't provide enough
+    if len(repo_details) < len(repos):
+        print(f"  [*] Enriching {len(repos) - len(repo_details)} repos with fallback data")
+        for i, r in enumerate(repos):
+            if i >= len(repo_details):
+                repo_details.append({
+                    "rank": r["rank"],
+                    "cn_summary": r.get("description", "")[:50],
+                    "highlights": [r.get("description", "")[:30]],
+                    "suitable_for": "开发者",
+                    "category": r.get("language", "其他"),
+                })
+
+    return repo_details, article
 
 
 def _format_repos_for_prompt(repos: list[dict]) -> str:
-    """将项目数据格式化为 prompt 中可读的文本"""
     lines = []
     for r in repos:
         lines.append(f"#{r['rank']} {r['full_name']}")
@@ -146,12 +163,15 @@ def _format_repos_for_prompt(repos: list[dict]) -> str:
 
 
 if __name__ == "__main__":
-    mock_repos = [
+    mock = [
         {"rank": i, "full_name": f"owner/repo-{i}", "url": f"https://github.com/owner/repo-{i}",
          "language": "Python", "stars_today": 100 - i * 10,
-         "description": f"An amazing tool for doing amazing thing #{i}"}
+         "description": f"Amazing tool #{i}"}
         for i in range(1, 11)
     ]
-    article = generate_article(mock_repos, output_path="test_article.md")
-    print("\n=== Generated Article Preview ===")
-    print(article[:500])
+    details, art = generate_article(mock)
+    print("\n=== Enriched Repos ===")
+    for d in details[:3]:
+        print(f"  #{d['rank']} {d['cn_summary']} | tags={d.get('category','')} | {d['highlights'][:2]}")
+    print("\n=== Article Preview ===")
+    print(art[:400])

@@ -63,9 +63,10 @@ def main():
     article_path = os.path.join(output_dir, f"article_{today_str}.md")
 
     try:
-        article = generate_article(repos=repos, output_path=article_path)
+        repo_details, article = generate_article(repos=repos, output_path=article_path)
     except Exception as e:
         print(f"  [!] Article generation failed: {e}")
+        repo_details = _fallback_details(repos)
         article = _fallback_article(repos)
         with open(article_path, "w", encoding="utf-8") as f:
             f.write(article)
@@ -82,7 +83,7 @@ def main():
     else:
         from build_page import build_daily_page
 
-        index_path = build_daily_page(article, today_str, project_dir)
+        index_path = build_daily_page(article, repo_details, repos, today_str, project_dir)
 
     print("")
     print("=" * 60)
@@ -90,6 +91,20 @@ def main():
     print(f"  Article: {article_path}")
     print(f"  Deploy:  Push to main → GitHub Pages auto-deploys")
     print("=" * 60)
+
+
+def _fallback_details(repos: list[dict]) -> list[dict]:
+    """AI 失败时的兜底结构化数据"""
+    return [
+        {
+            "rank": r["rank"],
+            "cn_summary": r.get("description", "")[:50],
+            "highlights": [r.get("description", "")[:30]] if r.get("description") else ["暂无"],
+            "suitable_for": "开发者",
+            "category": r.get("language", "其他"),
+        }
+        for r in repos
+    ]
 
 
 def _fallback_article(repos: list[dict]) -> str:
