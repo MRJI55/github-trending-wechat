@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="GitHub Trending 每日热榜 - AI 自动整理 Top 10 开源项目">
+<title>GitHub 热榜日报 — 2026年10月19日</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+    color: #c9d1d9;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    padding: 50px 20px 24px;
+    border-bottom: 1px solid #21262d;
+    margin-bottom: 20px;
+  }
+  .hero .badge {
+    display: inline-block;
+    background: #1f6feb33;
+    color: #58a6ff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .hero h1 { font-size: 1.75rem; color: #f0f6fc; margin-bottom: 6px; line-height: 1.3; }
+  .hero .date { font-size: 0.85rem; color: #8b949e; margin-top: 4px; }
+  .hero .tagline { font-size: 0.82rem; color: #8b949e; margin-top: 10px; line-height: 1.6; max-width: 520px; margin: 10px auto 0; }
+
+  .stats {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+    margin: 24px 0 20px;
+  }
+  .stat-item { text-align: center; }
+  .stat-item .num { font-size: 1.5rem; font-weight: 700; color: #e3b341; }
+  .stat-item .label { font-size: 0.7rem; color: #8b949e; letter-spacing: .05em; margin-top: 2px; }
+
+  .category-bar {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin: 0 0 30px;
+  }
+  .category-bar .ctag {
+    font-size: 0.72rem; padding: 4px 12px; border-radius: 12px;
+    background: #21262d; color: #8b949e; border: 1px solid #30363d;
+  }
+
+  .section-title {
+    font-size: 0.95rem; color: #8b949e; margin: 30px 0 14px;
+    padding-bottom: 8px; border-bottom: 1px solid #21262d;
+  }
+
+  .repo-card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+    padding: 22px 24px; margin-bottom: 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .repo-card:hover { border-color: #58a6ff; box-shadow: 0 0 0 1px #58a6ff22; }
+
+  .repo-card .top-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .repo-card .rank {
+    background: #21262d; color: #58a6ff; font-weight: 800; font-size: .75rem;
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .repo-card .rank.t1 { background: #e3b341; color: #0d1117; }
+  .repo-card .rank.t2 { background: #adbac7; color: #0d1117; }
+  .repo-card .rank.t3 { background: #cd8b62; color: #0d1117; }
+
+  .repo-card .name {
+    font-size: 1.05rem; font-weight: 600; color: #58a6ff; text-decoration: none; flex: 1;
+  }
+  .repo-card .name:hover { text-decoration: underline; }
+  .repo-card .stars-badge {
+    background: #21262d; border: 1px solid #30363d; border-radius: 6px;
+    padding: 3px 12px; font-size: .8rem; color: #e3b341; font-weight: 600; flex-shrink: 0;
+  }
+
+  .repo-card .summary {
+    font-size: .92rem; color: #f0f6fc; margin-bottom: 12px; line-height: 1.6;
+  }
+
+  .repo-card .highlights {
+    list-style: none; margin: 10px 0 12px;
+  }
+  .repo-card .highlights li {
+    font-size: .82rem; color: #c9d1d9; padding: 3px 0; line-height: 1.5;
+  }
+  .repo-card .highlights li::before { content: "▸ "; color: #58a6ff; }
+
+  .repo-card .bottom-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid #21262d;
+  }
+  .repo-card .bottom-row .lang {
+    font-size: .75rem; color: #8b949e;
+  }
+  .repo-card .bottom-row .suitable {
+    font-size: .75rem; color: #8b949e; margin-left: auto;
+  }
+  .repo-card .bottom-row .suitable::before { content: "🎯 "; }
+
+  .repo-card .tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .repo-card .tags .tag {
+    font-size: .68rem; padding: 2px 8px; border-radius: 8px;
+    background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb33;
+  }
+
+  .editor-pick {
+    background: linear-gradient(135deg, #1a2332, #1a1f35);
+    border: 1px solid #e3b34144; border-left: 3px solid #e3b341;
+    border-radius: 10px; padding: 22px; margin: 28px 0 10px;
+  }
+  .editor-pick h3 { color: #e3b341; font-size: .9rem; margin-bottom: 10px; }
+  .editor-pick p { font-size: .88rem; line-height: 1.75; color: #c9d1d9; }
+
+  .footer {
+    text-align: center; padding: 40px 20px 30px; color: #484f58;
+    font-size: .8rem; line-height: 2;
+  }
+  .footer a { color: #58a6ff; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .footer .cta { color: #c9d1d9; font-size: .9rem; margin-bottom: 12px; }
+
+  @media (max-width: 500px) {
+    .hero h1 { font-size: 1.25rem; }
+    .repo-card { padding: 14px 16px; }
+    .stats { gap: 16px; }
+    .stat-item .num { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="badge">Daily Trending</div>
+    <h1>GitHub 热榜日报 — 2026年10月19日</h1>
+    <div class="date">2026 年 10 月 19 日 · 每天 9:00 自动更新</div>
+    <div class="tagline">AI 自动抓取 GitHub Trending Top 10，逐个项目提炼亮点、领域标签和适用场景，三分钟看完今日开源动态。</div>
+  </div>
+
+  
+    <div class="stats">
+      <div class="stat-item"><div class="num">10</div><div class="label">上榜项目</div></div>
+      <div class="stat-item"><div class="num">10,388</div><div class="label">今日总 Star</div></div>
+      <div class="stat-item"><div class="num">4</div><div class="label">涉及领域</div></div>
+    </div>
+  <div class="category-bar"><span class="ctag">Python</span><span class="ctag">TypeScript</span><span class="ctag">Rust</span><span class="ctag">Kotlin</span></div>
+
+  <div class="section-title">📋 今日 Top 10</div>
+
+  
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t1">1</div>
+        <a class="name" href="https://github.com/MadsLorentzen/ai-job-search" target="_blank">MadsLorentzen/ai-job-search</a>
+        <span class="stars-badge">⭐ 2,232</span>
+      </div>
+      <div class="summary">The job search that runs on your machine. AI job a</div>
+      <ul class="highlights"><li>The job search that runs on yo</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t2">2</div>
+        <a class="name" href="https://github.com/anthropics/claude-plugins-official" target="_blank">anthropics/claude-plugins-official</a>
+        <span class="stars-badge">⭐ 1,175</span>
+      </div>
+      <div class="summary">Official, Anthropic-managed directory of high qual</div>
+      <ul class="highlights"><li>Official, Anthropic-managed di</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t3">3</div>
+        <a class="name" href="https://github.com/anomalyco/opencode" target="_blank">anomalyco/opencode</a>
+        <span class="stars-badge">⭐ 1,414</span>
+      </div>
+      <div class="summary">The open source coding agent.</div>
+      <ul class="highlights"><li>The open source coding agent.</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 TypeScript</span>
+        <div class="tags"><span class="tag">TypeScript</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">4</div>
+        <a class="name" href="https://github.com/cursor/plugins" target="_blank">cursor/plugins</a>
+        <span class="stars-badge">⭐ 350</span>
+      </div>
+      <div class="summary">Cursor plugin specification and official plugins</div>
+      <ul class="highlights"><li>Cursor plugin specification an</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 TypeScript</span>
+        <div class="tags"><span class="tag">TypeScript</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">5</div>
+        <a class="name" href="https://github.com/ruvnet/ruflo" target="_blank">ruvnet/ruflo</a>
+        <span class="stars-badge">⭐ 513</span>
+      </div>
+      <div class="summary">🌊 The original agent harness. Deploy intelligent m</div>
+      <ul class="highlights"><li>🌊 The original agent harness. </li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 TypeScript</span>
+        <div class="tags"><span class="tag">TypeScript</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">6</div>
+        <a class="name" href="https://github.com/akitaonrails/ai-memory" target="_blank">akitaonrails/ai-memory</a>
+        <span class="stars-badge">⭐ 512</span>
+      </div>
+      <div class="summary">Solution for long term memory for agent coding CLI</div>
+      <ul class="highlights"><li>Solution for long term memory </li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Rust</span>
+        <div class="tags"><span class="tag">Rust</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">7</div>
+        <a class="name" href="https://github.com/stablyai/orca" target="_blank">stablyai/orca</a>
+        <span class="stars-badge">⭐ 1,146</span>
+      </div>
+      <div class="summary">Orca is the place for working with a fleet of agen</div>
+      <ul class="highlights"><li>Orca is the place for working </li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 TypeScript</span>
+        <div class="tags"><span class="tag">TypeScript</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">8</div>
+        <a class="name" href="https://github.com/HKUDS/CLI-Anything" target="_blank">HKUDS/CLI-Anything</a>
+        <span class="stars-badge">⭐ 589</span>
+      </div>
+      <div class="summary">"CLI-Anything: Making ALL Software Agent-Native" -</div>
+      <ul class="highlights"><li>"CLI-Anything: Making ALL Soft</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">9</div>
+        <a class="name" href="https://github.com/debpalash/VoiceStudio" target="_blank">debpalash/VoiceStudio</a>
+        <span class="stars-badge">⭐ 2,082</span>
+      </div>
+      <div class="summary">VoiceStudio is the open-source, fully-local Eleven</div>
+      <ul class="highlights"><li>VoiceStudio is the open-source</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">10</div>
+        <a class="name" href="https://github.com/android/skills" target="_blank">android/skills</a>
+        <span class="stars-badge">⭐ 375</span>
+      </div>
+      <div class="summary"></div>
+      <ul class="highlights"><li>暂无</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Kotlin</span>
+        <div class="tags"><span class="tag">Kotlin</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+
+  
+
+  <div class="footer">
+    <div class="cta">📬 关注公众号 <strong>星探日报</strong>，底部菜单「今日热榜」随时查看</div>
+    <p>Powered by <a href="https://github.com/MRJI55/github-trending-wechat">GitHub Actions</a> · AI by <a href="https://github.com/marketplace/models">GitHub Models (Llama 3.3)</a> · Hosted on <a href="https://pages.github.com">GitHub Pages</a></p>
+    <p><a href="./archive/">📁 历史归档</a> · <a href="https://github.com/MRJI55/github-trending-wechat">⭐ Star on GitHub</a></p>
+    <p style="font-size:.7rem;margin-top:8px;">最后更新：2026-10-19 05:33 UTC</p>
+  </div>
+
+</div>
+</body>
+</html>
