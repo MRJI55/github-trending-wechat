@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="GitHub Trending 每日热榜 - AI 自动整理 Top 10 开源项目">
+<title>GitHub 热榜日报 — 2026年10月23日</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+    color: #c9d1d9;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+
+  .hero {
+    text-align: center;
+    padding: 50px 20px 24px;
+    border-bottom: 1px solid #21262d;
+    margin-bottom: 20px;
+  }
+  .hero .badge {
+    display: inline-block;
+    background: #1f6feb33;
+    color: #58a6ff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .hero h1 { font-size: 1.75rem; color: #f0f6fc; margin-bottom: 6px; line-height: 1.3; }
+  .hero .date { font-size: 0.85rem; color: #8b949e; margin-top: 4px; }
+  .hero .tagline { font-size: 0.82rem; color: #8b949e; margin-top: 10px; line-height: 1.6; max-width: 520px; margin: 10px auto 0; }
+
+  .stats {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+    margin: 24px 0 20px;
+  }
+  .stat-item { text-align: center; }
+  .stat-item .num { font-size: 1.5rem; font-weight: 700; color: #e3b341; }
+  .stat-item .label { font-size: 0.7rem; color: #8b949e; letter-spacing: .05em; margin-top: 2px; }
+
+  .category-bar {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin: 0 0 30px;
+  }
+  .category-bar .ctag {
+    font-size: 0.72rem; padding: 4px 12px; border-radius: 12px;
+    background: #21262d; color: #8b949e; border: 1px solid #30363d;
+  }
+
+  .section-title {
+    font-size: 0.95rem; color: #8b949e; margin: 30px 0 14px;
+    padding-bottom: 8px; border-bottom: 1px solid #21262d;
+  }
+
+  .repo-card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+    padding: 22px 24px; margin-bottom: 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .repo-card:hover { border-color: #58a6ff; box-shadow: 0 0 0 1px #58a6ff22; }
+
+  .repo-card .top-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .repo-card .rank {
+    background: #21262d; color: #58a6ff; font-weight: 800; font-size: .75rem;
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .repo-card .rank.t1 { background: #e3b341; color: #0d1117; }
+  .repo-card .rank.t2 { background: #adbac7; color: #0d1117; }
+  .repo-card .rank.t3 { background: #cd8b62; color: #0d1117; }
+
+  .repo-card .name {
+    font-size: 1.05rem; font-weight: 600; color: #58a6ff; text-decoration: none; flex: 1;
+  }
+  .repo-card .name:hover { text-decoration: underline; }
+  .repo-card .stars-badge {
+    background: #21262d; border: 1px solid #30363d; border-radius: 6px;
+    padding: 3px 12px; font-size: .8rem; color: #e3b341; font-weight: 600; flex-shrink: 0;
+  }
+
+  .repo-card .summary {
+    font-size: .92rem; color: #f0f6fc; margin-bottom: 12px; line-height: 1.6;
+  }
+
+  .repo-card .highlights {
+    list-style: none; margin: 10px 0 12px;
+  }
+  .repo-card .highlights li {
+    font-size: .82rem; color: #c9d1d9; padding: 3px 0; line-height: 1.5;
+  }
+  .repo-card .highlights li::before { content: "▸ "; color: #58a6ff; }
+
+  .repo-card .bottom-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid #21262d;
+  }
+  .repo-card .bottom-row .lang {
+    font-size: .75rem; color: #8b949e;
+  }
+  .repo-card .bottom-row .suitable {
+    font-size: .75rem; color: #8b949e; margin-left: auto;
+  }
+  .repo-card .bottom-row .suitable::before { content: "🎯 "; }
+
+  .repo-card .tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .repo-card .tags .tag {
+    font-size: .68rem; padding: 2px 8px; border-radius: 8px;
+    background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb33;
+  }
+
+  .editor-pick {
+    background: linear-gradient(135deg, #1a2332, #1a1f35);
+    border: 1px solid #e3b34144; border-left: 3px solid #e3b341;
+    border-radius: 10px; padding: 22px; margin: 28px 0 10px;
+  }
+  .editor-pick h3 { color: #e3b341; font-size: .9rem; margin-bottom: 10px; }
+  .editor-pick p { font-size: .88rem; line-height: 1.75; color: #c9d1d9; }
+
+  .footer {
+    text-align: center; padding: 40px 20px 30px; color: #484f58;
+    font-size: .8rem; line-height: 2;
+  }
+  .footer a { color: #58a6ff; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .footer .cta { color: #c9d1d9; font-size: .9rem; margin-bottom: 12px; }
+
+  @media (max-width: 500px) {
+    .hero h1 { font-size: 1.25rem; }
+    .repo-card { padding: 14px 16px; }
+    .stats { gap: 16px; }
+    .stat-item .num { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="badge">Daily Trending</div>
+    <h1>GitHub 热榜日报 — 2026年10月23日</h1>
+    <div class="date">2026 年 10 月 23 日 · 每天 9:00 自动更新</div>
+    <div class="tagline">AI 自动抓取 GitHub Trending Top 10，逐个项目提炼亮点、领域标签和适用场景，三分钟看完今日开源动态。</div>
+  </div>
+
+  
+    <div class="stats">
+      <div class="stat-item"><div class="num">9</div><div class="label">上榜项目</div></div>
+      <div class="stat-item"><div class="num">8,015</div><div class="label">今日总 Star</div></div>
+      <div class="stat-item"><div class="num">5</div><div class="label">涉及领域</div></div>
+    </div>
+  <div class="category-bar"><span class="ctag">Python</span><span class="ctag">JavaScript</span><span class="ctag">C</span><span class="ctag">TypeScript</span><span class="ctag">Visual Basic .NET</span></div>
+
+  <div class="section-title">📋 今日 Top 9</div>
+
+  
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t1">1</div>
+        <a class="name" href="https://github.com/php/php-src" target="_blank">php/php-src</a>
+        <span class="stars-badge">⭐ 287</span>
+      </div>
+      <div class="summary">The PHP Interpreter</div>
+      <ul class="highlights"><li>The PHP Interpreter</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 C</span>
+        <div class="tags"><span class="tag">C</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t2">2</div>
+        <a class="name" href="https://github.com/anthropics/knowledge-work-plugins" target="_blank">anthropics/knowledge-work-plugins</a>
+        <span class="stars-badge">⭐ 303</span>
+      </div>
+      <div class="summary">Open source repository of plugins primarily intend</div>
+      <ul class="highlights"><li>Open source repository of plug</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank t3">3</div>
+        <a class="name" href="https://github.com/DietrichGebert/ponytail" target="_blank">DietrichGebert/ponytail</a>
+        <span class="stars-badge">⭐ 1,948</span>
+      </div>
+      <div class="summary">Makes your AI agent think like the laziest senior </div>
+      <ul class="highlights"><li>Makes your AI agent think like</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 JavaScript</span>
+        <div class="tags"><span class="tag">JavaScript</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">4</div>
+        <a class="name" href="https://github.com/cloudflare/security-audit-skill" target="_blank">cloudflare/security-audit-skill</a>
+        <span class="stars-badge">⭐ 2,979</span>
+      </div>
+      <div class="summary">A coding-agent skill for multi-phase security audi</div>
+      <ul class="highlights"><li>A coding-agent skill for multi</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 JavaScript</span>
+        <div class="tags"><span class="tag">JavaScript</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">5</div>
+        <a class="name" href="https://github.com/Graphify-Labs/graphify" target="_blank">Graphify-Labs/graphify</a>
+        <span class="stars-badge">⭐ 1,408</span>
+      </div>
+      <div class="summary">Turn any codebase, with its docs, SQL schemas, con</div>
+      <ul class="highlights"><li>Turn any codebase, with its do</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">6</div>
+        <a class="name" href="https://github.com/supabase/supabase" target="_blank">supabase/supabase</a>
+        <span class="stars-badge">⭐ 693</span>
+      </div>
+      <div class="summary">The Postgres development platform. Supabase gives </div>
+      <ul class="highlights"><li>The Postgres development platf</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 TypeScript</span>
+        <div class="tags"><span class="tag">TypeScript</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">7</div>
+        <a class="name" href="https://github.com/fastapi/fastapi" target="_blank">fastapi/fastapi</a>
+        <span class="stars-badge">⭐ 101</span>
+      </div>
+      <div class="summary">FastAPI framework, high performance, easy to learn</div>
+      <ul class="highlights"><li>FastAPI framework, high perfor</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">8</div>
+        <a class="name" href="https://github.com/luongnv89/claude-howto" target="_blank">luongnv89/claude-howto</a>
+        <span class="stars-badge">⭐ 177</span>
+      </div>
+      <div class="summary">A visual, example-driven guide to Claude Code — fr</div>
+      <ul class="highlights"><li>A visual, example-driven guide</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Python</span>
+        <div class="tags"><span class="tag">Python</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+    <div class="repo-card">
+      <div class="top-row">
+        <div class="rank ">9</div>
+        <a class="name" href="https://github.com/Meloong-Git/PCL" target="_blank">Meloong-Git/PCL</a>
+        <span class="stars-badge">⭐ 119</span>
+      </div>
+      <div class="summary">Minecraft 启动器 Plain Craft Launcher（PCL）。</div>
+      <ul class="highlights"><li>Minecraft 启动器 Plain Craft Laun</li></ul>
+      <div class="bottom-row">
+        <span class="lang">🔧 Visual Basic .NET</span>
+        <div class="tags"><span class="tag">Visual Basic .NET</span></div>
+        <span class="suitable">开发者</span>
+      </div>
+    </div>
+
+  
+
+  <div class="footer">
+    <div class="cta">📬 关注公众号 <strong>星探日报</strong>，底部菜单「今日热榜」随时查看</div>
+    <p>Powered by <a href="https://github.com/MRJI55/github-trending-wechat">GitHub Actions</a> · AI by <a href="https://github.com/marketplace/models">GitHub Models (Llama 3.3)</a> · Hosted on <a href="https://pages.github.com">GitHub Pages</a></p>
+    <p><a href="./archive/">📁 历史归档</a> · <a href="https://github.com/MRJI55/github-trending-wechat">⭐ Star on GitHub</a></p>
+    <p style="font-size:.7rem;margin-top:8px;">最后更新：2026-10-23 05:37 UTC</p>
+  </div>
+
+</div>
+</body>
+</html>
